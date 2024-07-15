@@ -2054,22 +2054,9 @@ float atof_kr(char s[]) {
     return sign * val / power;
 }
 
-int main() {
-    // test_add();
-    // test_mul();
-    // test_mul2();
-    // test_mul3();
-    //test_div();
-    //int_float_case();
-
-    //tmp_calc();
-
-    //division_research();
-
-    //hex_to_float();
-
+void atof_test() {
     char numString[] = "3.14159";
-    
+
     std::cout << "desktop: \n";
     double res0 = atof(numString);
     print_double_as_hex(&res0);
@@ -2090,6 +2077,432 @@ int main() {
     float res3 = atof_kr(num);
     print_float_as_hex(&res3);
     std::cout << '\n';
+}
+
+//
+// Реализация из z88dk. [https://z88dk.org/site/]
+// Оригинальная версия с double.
+void ftoa_double(double x, int f, char* str) {
+    double scale;           /* scale factor */
+    int i,                  /* copy of f, and # digits before decimal point */
+        d;                  /* a digit */
+
+    if (x < 0.0) {
+        *str++ = '-';
+        x = -x;
+    }
+    i = f;
+    scale = 2.0;
+    while (i--)
+        scale *= 10.0;
+    x += 1.0 / scale;
+    /* count places before decimal & scale the number */
+    i = 0;
+    scale = 1.0;
+    while (x >= scale) {
+        scale *= 10.0;
+        i++;
+    }
+    if (i == 0)
+        *str++ = '0';
+
+    while (i--) {
+        /* output digits before decimal */
+        x = fabs(x);
+        scale = floor(0.5 + scale * 0.1);
+        d = x / scale;
+        *str++ = d + '0';
+        x = x - ((double)d * scale);
+    }
+    if (f <= 0) {
+        *str = 0;
+        return;
+    }
+    *str++ = '.';
+    while (f--) {
+        /* output digits after decimal */
+        x = fabs(x);
+        x *= 10.0;
+        d = x;
+        *str++ = d + '0';
+        x -= (double)d;
+    }
+    *str = 0;
+}
+
+//
+// Реализация из z88dk. [https://z88dk.org/site/]
+// Версия с float.
+void ftoa_float(float x, int f, char* str) {
+    float scale;            /* scale factor */
+    int i,                  /* copy of f, and # digits before decimal point */
+        d;                  /* a digit */
+
+    if (x < 0.0f) {
+        *str++ = '-';
+        x = -x;
+    }
+    i = f;
+    scale = 2.0f;
+    while (i--)
+        scale *= 10.0f;
+    x += 1.0f / scale;
+    /* count places before decimal & scale the number */
+    i = 0;
+    scale = 1.0f;
+    while (x >= scale) {
+        scale *= 10.0f;
+        i++;
+    }
+    if (i == 0)
+        *str++ = '0';
+
+    while (i--) {
+        /* output digits before decimal */
+        x = fabs(x);
+        scale = floor(0.5f + scale * 0.1f);
+        d = x / scale;
+        *str++ = d + '0';
+        x = x - ((float)d * scale);
+    }
+    if (f <= 0) {
+        *str = 0;
+        return;
+    }
+    *str++ = '.';
+    while (f--) {
+        /* output digits after decimal */
+        x = fabs(x);
+        x *= 10.0f;
+        d = x;
+        *str++ = d + '0';
+        x -= (float)d;
+    }
+    *str = 0;
+}
+
+//
+// Реализация из z88dk. [https://z88dk.org/site/]
+// Версия с float и нашими модификациями: "лишний" код, устранение переполнения для граничных случаев.
+void ftoa_float_mod(float num, int digitCount, char* str) {
+    float scale;            // scale factor
+    int i;                  // copy of digitCount, and # digits before decimal point
+    int digit;              // a digit
+
+    if (num < 0.0f) {
+        *str++ = '-';
+        num = -num;
+    }    
+    i = 1;
+    scale = 1.0f;
+    float numDiv10 = num * 0.1f; // Чтобы избежать переполнения.
+    while (numDiv10 >= scale) {
+        scale *= 10.0f;
+        i++;
+    }
+
+    while (i--) {
+        digit = num / scale;
+        *str++ = digit + '0';
+        num = num - ((float)digit * scale);
+        scale = scale * 0.1f;
+    }
+    if (digitCount <= 0) {
+        *str = 0;
+        return;
+    }
+    *str++ = '.';
+    while (digitCount--) {
+        num *= 10.0f;
+        digit = num;
+        *str++ = digit + '0';
+        num -= (float)digit;
+    }
+    *str = 0;
+}
+
+void ftoa_double_test() {
+    std::cout << "ftoa_double: 2^-126.\n";
+    double minNormal = powf(2, -126);
+    std::cout << std::fixed << std::setprecision(150) << minNormal << '\n';
+
+    char minNormalString[255];
+    ftoa_double(minNormal, 200, minNormalString);
+    std::cout << minNormalString << '\n';
+
+    std::cout << '\n';
+
+    std::cout << "ftoa_double: (2^24 - 1) * 2^-23 * 2^127.\n";
+    double maxNormal = (powf(2, 24) - 1) * powf(2, -23) * powf(2, 127);
+    std::cout << std::fixed << std::setprecision(150) << maxNormal << '\n';
+
+    char maxNormalString[255];
+    ftoa_double(maxNormal, 200, maxNormalString);
+    std::cout << maxNormalString << '\n';
+}
+
+void ftoa_float_edge_cases_test() {
+    std::cout << "ftoa_float: 2^-126.\n";
+    float minNormal = powf(2, -126);
+    std::cout << std::fixed << std::setprecision(150) << minNormal << '\n';
+
+    char minNormalString[255];
+    ftoa_float(minNormal, 200, minNormalString);
+    std::cout << minNormalString << '\n';
+
+    std::cout << '\n';
+
+    std::cout << "ftoa_float: (2^24 - 1) * 2^-23 * 2^127.\n";
+    float maxNormal = (powf(2, 24) - 1) * powf(2, -23) * powf(2, 127);
+    std::cout << std::fixed << std::setprecision(150) << maxNormal << '\n';
+
+    char maxNormalString[255];
+    ftoa_float(maxNormal, 200, maxNormalString);
+    std::cout << maxNormalString << '\n';
+
+    std::cout << '\n';
+
+    // Минимальный порядок, при котором ломается и даёт ноль. Мантисса при этом максимальная.
+    std::cout << "ftoa_float: (2^24 - 1) * 2^-23 * 2^126.\n";
+    float a = (powf(2, 24) - 1) * powf(2, -23) * powf(2, 126);
+    std::cout << std::fixed << std::setprecision(100) << a << '\n';
+
+    char aString[1024];
+    ftoa_float(a, 200, aString);
+    std::cout << aString << '\n';
+
+    std::cout << '\n';
+
+    // Оставляем тот же порядок, но берем минимальную мантиссу.
+    std::cout << "ftoa_float: 1.0f * 2^126.\n";
+    float b = 1.0f * powf(2, 126);
+    std::cout << std::fixed << std::setprecision(100) << b << '\n';
+
+    char bString[1024];
+    ftoa_float(b, 200, bString);
+    std::cout << bString << '\n';
+
+    std::cout << '\n';
+
+    // Берем максимальный порядок, но оставляем минимальную мантиссу.
+    std::cout << "ftoa_float: 1.0f * 2^127.\n";
+    float c = 1.0f * powf(2, 127);
+    std::cout << std::fixed << std::setprecision(100) << c << '\n';
+
+    char cString[1024];
+    ftoa_float(c, 200, cString);
+    std::cout << cString << '\n';
+}
+
+void ftoa_float_simple_test() {
+    std::cout << "ftoa_float_simple_test\n";
+    //float a = (powf(2, 24) - 1) * powf(2, -23) * powf(2, -100);
+    float a = (powf(2, 24) - 1) * powf(2, -23) * powf(2, 127);
+    //float a = 723.05f;
+    std::cout << std::fixed << std::setprecision(150) << a << '\n';
+
+    char aString[255];
+    ftoa_float(a, 10, aString);
+    std::cout << aString << '\n';
+
+    std::cout << '\n';
+}
+
+//
+// К вопросу о том, почему после конвертации не все десятичные разряды оказываются истинными.
+void incorrect_deciaml() {
+    float a = 0.01251220703125f; // Точно представимо в одинарном float.
+    print_float_as_hex(&a);
+    std::cout << std::fixed << std::setprecision(100) << a << "\n\n";
+
+    // Здесь мы сразу масштабируем всё число целиком.
+    // Истинное десятичное представление a=0.01251220703125 после масштабирования должно быть равно 1251220.703125.
+    // Но из-за округления в процессе умножения на степень десяти исходное десятичное представление исходной
+    // двоичной дроби искажается и к 9 знаку мы уже теряем истинные десятичные разряды.
+    float b = a * powf(10, 8);
+    std::cout << std::fixed << std::setprecision(100) << b << "\n\n";
+
+    std::cout << "\n";
+
+    // А здесь мы последовательно умножаем на 10 и каждый раз отнимаем целую часть.
+    //0.1251220703125;
+    a *= 10.0f; a -= 0.0f;
+    std::cout << std::fixed << std::setprecision(100) << a << "\n\n";
+
+    //1.251220703125;
+    a *= 10.0f; a -= 1.0f;
+    std::cout << std::fixed << std::setprecision(100) << a << "\n\n";
+
+    //2.51220703125;
+    a *= 10.0f; a -= 2.0f;
+    std::cout << std::fixed << std::setprecision(100) << a << "\n\n";
+
+    //5.1220703125;
+    a *= 10.0f; a -= 5.0f;
+    std::cout << std::fixed << std::setprecision(100) << a << "\n\n";
+
+    //1.220703125;
+    a *= 10.0f; a -= 1.0f;
+    std::cout << std::fixed << std::setprecision(100) << a << "\n\n";
+
+    //2.20703125;
+    a *= 10.0f; a -= 2.0f;
+    std::cout << std::fixed << std::setprecision(100) << a << "\n\n";
+
+    //2.0703125;
+    a *= 10.0f; a -= 2.0f;
+    std::cout << std::fixed << std::setprecision(100) << a << "\n\n";
+
+    //0.703125;
+    a *= 10.0f; a -= 0.0f;
+    std::cout << std::fixed << std::setprecision(100) << a << "\n\n";
+
+    //7.03125;
+    a *= 10.0f; a -= 7.0f;
+    std::cout << std::fixed << std::setprecision(100) << a << "\n\n";
+
+    //0.3125;
+    a *= 10.0f; a -= 0.0f;
+    std::cout << std::fixed << std::setprecision(100) << a << "\n\n";
+
+    //3.125;
+    a *= 10.0f; a -= 3.0f;
+    std::cout << std::fixed << std::setprecision(100) << a << "\n\n";
+
+    //1.25;
+    a *= 10.0f; a -= 1.0f;
+    std::cout << std::fixed << std::setprecision(100) << a << "\n\n";
+
+    //2.5;
+    a *= 10.0f; a -= 2.0f;
+    std::cout << std::fixed << std::setprecision(100) << a << "\n\n";
+
+    //5;
+    a *= 10.0f; a -= 5.0f;
+    std::cout << std::fixed << std::setprecision(100) << a << "\n\n";
+
+    std::cout << "\n";
+
+    // А здесь мы отнимаем те же разряды, но без попутного масштабирования.
+    // Результат оказывается лучше, чем в первом случае, когда мы сразу масштабируем число целиком, но хуже, чем в предыдущем случае.
+    a = 0.01251220703125f;
+    a -= 0.01f;
+    a -= 0.002f;
+    a -= 0.0005f;
+    a -= 0.00001f;
+    a -= 0.000002f;
+    a -= 0.0000002f;
+    print_float_as_hex(&a);
+    std::cout << std::fixed << std::setprecision(100) << a * powf(10, 8) << '\n';
+}
+
+void debugging_modification() {
+    //float a = 0.01251220703125f;
+    float a = 3.141590118408203125f;
+    char aString[255];
+    char aString2[255];
+    ftoa_float(a, 1, aString);
+    ftoa_float_mod(a, 1, aString2);
+    std::cout << aString << '\n';
+    std::cout << aString2 << '\n';
+
+    std::cout << '\n';
+
+    std::cout << "ftoa_float: 2^-126.\n";
+    float minNormal = powf(2, -126);
+    std::cout << std::fixed << std::setprecision(100) << minNormal << "\n\n";
+
+    char minNormalString[255];
+    char minNormalString2[255];
+    ftoa_float(minNormal, 200, minNormalString);
+    ftoa_float_mod(minNormal, 200, minNormalString2);
+    std::cout << minNormalString << '\n';
+    std::cout << minNormalString2 << '\n';
+
+    std::cout << '\n';
+
+    std::cout << "ftoa_float: (2^24 - 1) * 2^-23 * 2^127.\n";
+    float maxNormal = (powf(2, 24) - 1) * powf(2, -23) * powf(2, 127);
+    std::cout << std::fixed << std::setprecision(100) << maxNormal << "\n\n";
+
+    char maxNormalString[255];
+    char maxNormalString2[255];
+    ftoa_float(maxNormal, 200, maxNormalString);
+    ftoa_float_mod(maxNormal, 200, maxNormalString2);
+    std::cout << maxNormalString << '\n';
+    std::cout << maxNormalString2 << '\n';
+
+    std::cout << '\n';
+
+    std::cout << "ftoa_float: (2^24 - 1) * 2^-23 * 2^96.\n";
+    float avgValue = (powf(2, 24) - 1) * powf(2, -23) * powf(2, 125);
+    std::cout << std::fixed << std::setprecision(100) << avgValue << "\n\n";
+
+    char avgValueString[255];
+    char avgValueString2[255];
+    ftoa_float(-avgValue, 200, avgValueString);
+    ftoa_float_mod(-avgValue, 200, avgValueString2);
+    std::cout << avgValueString << '\n';
+    std::cout << avgValueString2 << '\n';
+
+    std::cout << '\n';
+
+    // < 1.
+    std::cout << "xxxx\n";
+    float t = 0.00234723393805325031280517578125f;
+    std::cout << std::fixed << std::setprecision(100) << t << "\n\n";
+
+    char tString[255];
+    char tString2[255];
+    ftoa_float(t, 200, tString);
+    ftoa_float_mod(t, 10, tString2);
+    std::cout << tString << '\n';
+    std::cout << tString2 << '\n';
+}
+
+void temp_test() {
+    //float a = -123.45600128173828125f; // Точно представимо в одинарном float.
+    //float a = 0.5f; // Точно представимо в одинарном float.
+    //float a = 6546.67578125f; // Точно представимо в одинарном float.
+    //float a = 0.08089999854564666748046875f; // Точно представимо в одинарном float.
+    float a = (powf(2, 24) - 1) * powf(2, -23) * powf(2, 127); // Точно представимо в одинарном float.
+    std::cout << std::fixed << std::setprecision(20) << a << "\n";
+    print_float_as_hex(&a);
+
+    std::cout << '\n';
+
+    char str[255];
+    ftoa_float_mod(a, 20, str);
+    std::cout << str << '\n';
+}
+
+int main() {
+    // test_add();
+    // test_mul();
+    // test_mul2();
+    // test_mul3();
+    //test_div();
+    //int_float_case();
+
+    //tmp_calc();
+
+    //division_research();
+
+    //hex_to_float();
+
+    //atof_test();
+
+    //ftoa_double_test();
+    //std::cout << '\n';
+    //ftoa_float_edge_cases_test();
+
+    //ftoa_float_simple_test();
+
+    //incorrect_deciaml();
+
+    //debugging_modification();
+
+    temp_test();
 
     return 0;
 }
