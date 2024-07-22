@@ -1967,7 +1967,7 @@ double atof_z88dk(char* s)
 }
 
 //
-// atof from SDCC. [https://sdcc.sourceforge.net/]
+// atof из SDCC [https://sdcc.sourceforge.net/].
 float atof_sdcc(const char* s)
 {
     float value, fraction;
@@ -2033,8 +2033,31 @@ float atof_sdcc(const char* s)
 }
 
 //
+// atof из K&R.
+double atof_kr(char s[]) {
+    double val, power;
+    int i = 0, sign;
+
+    sign = (s[0] == '-') ? -1 : 1;
+
+    for (val = 0.0; isdigit(s[i]); i++)
+        val = 10.0 * val + (s[i] - '0');
+
+    if (s[i] == '.')
+        i++;
+
+    for (power = 1.0; isdigit(s[i]); i++) {
+        val = 10.0 * val + (s[i] - '0');
+        power *= 10;
+    }
+
+    return sign * val / power;
+}
+
+//
 // atof from K&R.
-float atof_kr(char s[]) {
+// Теперь float вместо double.
+float atof_kr_float(char s[]) {
     float val, power;
     int i = 0, sign;
 
@@ -2057,30 +2080,46 @@ float atof_kr(char s[]) {
 void atof_test() {
     char numString[] = "3.14159";
 
-    std::cout << "desktop: \n";
+    std::cout << "desktop (native): \n";
+    std::cout << "string: " << numString << '\n';
     double res0 = atof(numString);
+    std::cout << "number: " << std::fixed << std::setprecision(150) << res0 << "\n";
     print_double_as_hex(&res0);
     std::cout << '\n';
 
     std::cout << "z88dk: \n";
+    std::cout << "string: " << numString << '\n';
     double res1 = atof_z88dk(numString);
+    std::cout << "number: " << std::fixed << std::setprecision(150) << res1 << "\n";
     print_double_as_hex(&res1);
     std::cout << '\n';
 
     std::cout << "sdcc: \n";
+    std::cout << "string: " << numString << '\n';
     float res2 = atof_sdcc(numString);
+    std::cout << "number: " << std::fixed << std::setprecision(150) << res2 << "\n";
     print_float_as_hex(&res2);
     std::cout << '\n';
 
-    std::cout << "kr: \n";
-    char num[] = "1.99999988079071044921875";
-    float res3 = atof_kr(num);
-    print_float_as_hex(&res3);
+    std::cout << "atof_kr: \n";
+    //char num[] = "1.99999988079071044921875";
+    std::cout << "string: " << numString << '\n';
+    double res3 = atof_kr(numString);
+    std::cout << "number: " << std::fixed << std::setprecision(150) << res3 << "\n";
+    print_double_as_hex(&res3);
+    std::cout << '\n';
+
+    std::cout << "atof_kr_float: \n";
+    //char num[] = "1.99999988079071044921875";
+    std::cout << "string: " << numString << '\n';
+    float res4 = atof_kr_float(numString);
+    std::cout << "number: " << std::fixed << std::setprecision(150) << res4 << "\n";
+    print_float_as_hex(&res4);
     std::cout << '\n';
 }
 
 //
-// Реализация из z88dk. [https://z88dk.org/site/]
+// Реализация ftoa из z88dk [https://z88dk.org/site/].
 // Оригинальная версия с double.
 void ftoa_double(double x, int f, char* str) {
     double scale;           /* scale factor */
@@ -2131,7 +2170,7 @@ void ftoa_double(double x, int f, char* str) {
 }
 
 //
-// Реализация из z88dk. [https://z88dk.org/site/]
+// Реализация ftoa из z88dk [https://z88dk.org/site/].
 // Версия с float.
 void ftoa_float(float x, int f, char* str) {
     float scale;            /* scale factor */
@@ -2182,7 +2221,7 @@ void ftoa_float(float x, int f, char* str) {
 }
 
 //
-// Реализация из z88dk. [https://z88dk.org/site/]
+// Реализация ftoa из z88dk [https://z88dk.org/site/].
 // Версия с float и нашими модификациями: "лишний" код, устранение переполнения для граничных случаев.
 void ftoa_float_mod(float num, int digitCount, char* str) {
     float scale;            // scale factor
@@ -2396,7 +2435,7 @@ void incorrect_deciaml() {
     std::cout << std::fixed << std::setprecision(100) << a * powf(10, 8) << '\n';
 }
 
-void debugging_modification() {
+void atof_mod_debugging() {
     //float a = 0.01251220703125f;
     float a = 3.141590118408203125f;
     char aString[255];
@@ -2490,7 +2529,7 @@ int main() {
 
     //hex_to_float();
 
-    //atof_test();
+    atof_test();
 
     //ftoa_double_test();
     //std::cout << '\n';
@@ -2500,9 +2539,9 @@ int main() {
 
     //incorrect_deciaml();
 
-    //debugging_modification();
+    //atof_mod_debugging();
 
-    temp_test();
+    //temp_test();
 
     return 0;
 }
