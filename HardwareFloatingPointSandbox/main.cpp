@@ -11,6 +11,96 @@
 
 using namespace std;
 
+void print_float_as_hex(float* a) {
+    uint32_t intRep = *(uint32_t*)a;
+    std::cout << std::hex << std::setfill('0') << std::setw(8) << intRep << std::endl;
+}
+
+void print_double_as_hex(double* a) {
+    uint64_t intRep = *(uint64_t*)a;
+    std::cout << std::hex << std::setfill('0') << std::setw(16) << intRep << std::endl;
+}
+
+void neg_inf() {
+    float a = -1.0f;
+    float b = 0.0f;
+    float c = a / b;
+
+    std::cout << std::fixed << std::setprecision(150) << "a=" << a << std::endl;
+    std::cout << std::fixed << std::setprecision(150) << "b=" << b << std::endl;
+    std::cout << std::fixed << std::setprecision(150) << "r=" << c << std::endl;
+
+    std::cout << "subnormal: " << std::boolalpha << !std::isnormal(c) << std::endl;
+
+    print_float_as_hex(&c);
+
+    std::cout << '\n';
+}
+
+void pos_inf() {
+    float a = 1.0f;
+    float b = 0.0f;
+    float c = a / b;
+
+    std::cout << std::fixed << std::setprecision(150) << "a=" << a << std::endl;
+    std::cout << std::fixed << std::setprecision(150) << "b=" << b << std::endl;
+    std::cout << std::fixed << std::setprecision(150) << "r=" << c << std::endl;
+
+    std::cout << "subnormal: " << std::boolalpha << !std::isnormal(c) << std::endl;
+
+    print_float_as_hex(&c);
+
+    std::cout << '\n';
+}
+
+void q_nan_pos() {
+    uint32_t intRep = 0x7f800001;
+    float a = *(float*)&intRep;
+    std::cout << std::fixed << std::setprecision(150) << "a=" << a << std::endl;
+
+    std::cout << "subnormal: " << std::boolalpha << !std::isnormal(a) << std::endl;
+
+    print_float_as_hex(&a);
+
+    std::cout << '\n';
+}
+
+void q_nan_neg() {
+    uint32_t intRep = 0xff800001;
+    float a = *(float*)&intRep;
+    std::cout << std::fixed << std::setprecision(150) << "a=" << a << std::endl;
+
+    std::cout << "subnormal: " << std::boolalpha << !std::isnormal(a) << std::endl;
+
+    print_float_as_hex(&a);
+
+    std::cout << '\n';
+}
+
+void sig_nan() {
+    float a = 0.0f;
+    float b = 0.0f;
+    float c = a / b;
+
+    std::cout << std::fixed << std::setprecision(150) << "a=" << a << std::endl;
+    std::cout << std::fixed << std::setprecision(150) << "b=" << b << std::endl;
+    std::cout << std::fixed << std::setprecision(150) << "r=" << c << std::endl;
+
+    std::cout << "subnormal: " << std::boolalpha << !std::isnormal(c) << std::endl;
+
+    print_float_as_hex(&c);
+
+    std::cout << '\n';
+}
+
+void special_values() {
+    neg_inf();
+    pos_inf();
+    sig_nan();
+    q_nan_pos();
+    q_nan_neg();
+}
+
 void func1() {
     float a = ((powf(2, 24) - 1) * powf(2, -23)) * powf(2, -126);
     float b = a - powf(2, -126);
@@ -1868,16 +1958,6 @@ void division_research() {
     normalized_over_denormalized_max();
 }
 
-void print_float_as_hex(float* a) {
-    uint32_t intRep = *(uint32_t*)a;
-    std::cout << std::hex << std::setfill('0') << std::setw(8) << intRep << std::endl;
-}
-
-void print_double_as_hex(double* a) {
-    uint64_t intRep = *(uint64_t*)a;
-    std::cout << std::hex << std::setfill('0') << std::setw(16) << intRep << std::endl;
-}
-
 void hex_to_float() {
     uint32_t x = 0x3f9d70a4;
     float f = *((float*)&x);
@@ -2529,7 +2609,7 @@ int main() {
 
     //hex_to_float();
 
-    atof_test();
+    //atof_test();
 
     //ftoa_double_test();
     //std::cout << '\n';
@@ -2542,6 +2622,8 @@ int main() {
     //atof_mod_debugging();
 
     //temp_test();
+
+    special_values();
 
     return 0;
 }
