@@ -2311,7 +2311,7 @@ void ftoa_float_mod(float num, int digitCount, char* str) {
     if (num < 0.0f) {
         *str++ = '-';
         num = -num;
-    }    
+    }
     i = 1;
     scale = 1.0f;
     float numDiv10 = num * 0.1f; // Чтобы избежать переполнения.
@@ -2595,6 +2595,28 @@ void temp_test() {
     std::cout << str << '\n';
 }
 
+//
+// Демонстрация изменения направления округления переменной типа float
+// когда промежуточные вычисления происходят в double.
+void double_float() {
+    float val_float = (powf(2, 24) - 1) * powf(2, -23); // Базовое значение. Все единицы в мантиссе.
+    float delta1_float = powf(2, -25) + powf(2, -26);
+    float delta2_float = powf(2, -26);
+
+    double delta1_double = powl(2, -25) + powl(2, -26);
+    double delta2_double = powl(2, -26);
+
+    float r1 = (val_float + delta1_double) + delta2_double; // Вычисления в double, округление только при конвертации в float. Округление в большую, повышение порядка.
+    std::cout << std::fixed << std::setprecision(100) << r1 << "\n";
+    print_float_as_hex(&r1);
+
+    std::cout << '\n';
+
+    float r2 = (val_float + delta1_float) + delta2_float; // Вычисления в float, округление при сложении, округление в меньшую сторону, результат - исходное значение.
+    std::cout << std::fixed << std::setprecision(100) << r2 << "\n";
+    print_float_as_hex(&r2);
+}
+
 int main() {
     // test_add();
     // test_mul();
@@ -2623,7 +2645,8 @@ int main() {
 
     //temp_test();
 
-    special_values();
+    //special_values();
+    double_float();
 
     return 0;
 }
