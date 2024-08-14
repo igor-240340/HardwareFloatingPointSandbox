@@ -2429,7 +2429,7 @@ void ftoa_float_simple_test() {
 
 //
 // К вопросу о том, почему после конвертации не все десятичные разряды оказываются истинными.
-void incorrect_deciaml() {
+void incorrect_decimal() {
     float a = 0.01251220703125f; // Точно представимо в одинарном float.
     print_float_as_hex(&a);
     std::cout << std::fixed << std::setprecision(100) << a << "\n\n";
@@ -2639,14 +2639,30 @@ int main() {
 
     //ftoa_float_simple_test();
 
-    //incorrect_deciaml();
+    //incorrect_decimal();
 
     //atof_mod_debugging();
 
     //temp_test();
 
     //special_values();
-    double_float();
+    //double_float();
+
+    // К проблеме нормализации положительных степеней десяти.
+    for (int i = 0; i <= 38; i++) {
+        float a = powl(10, i);
+        //double a = powl(10, i);
+
+        std::cout << "fixed: " << std::fixed << std::setprecision(150) << a << "\n";
+        std::cout << "scientific: " << std::scientific << std::setprecision(150) << a << "\n";
+
+        char minNormalString[500];
+        ftoa_float(a, 100, minNormalString);
+        //ftoa_double(a, 100, minNormalString);
+        std::cout << "res: " << minNormalString << '\n';
+
+        std::cout << '\n';
+    }
 
     return 0;
 }
