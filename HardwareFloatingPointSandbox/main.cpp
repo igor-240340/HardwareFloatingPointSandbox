@@ -2650,7 +2650,7 @@ int main() {
 
     // К проблеме нормализации положительных степеней десяти.
     for (int i = 0; i <= 38; i++) {
-        float a = powl(10, i);
+        float a = powf(10, i);
         //double a = powl(10, i);
 
         std::cout << "fixed: " << std::fixed << std::setprecision(150) << a << "\n";
